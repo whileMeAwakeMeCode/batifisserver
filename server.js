@@ -20,11 +20,11 @@ const s3 = new aws.S3();
 const upload = multer({
     storage:multerS3({
         s3,
-        bucket:process.env.S3_MEDIAS_BUCKET,    
+        bucket:process.env.S3_IMAGES_BUCKET,    
         contentType:multerS3.AUTO_CONTENT_TYPE,
         acl:'public-read',
         metadata:function(req,file,callback){callback(null,{fieldName:file.fieldname})},
-        key:function(req,file,callback){callback(null,'batifis_'+Date.now())},
+        key:function(req,file,callback){callback(null,'batifis_img_'+Date.now())},
     })
 });
 
