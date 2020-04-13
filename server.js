@@ -62,4 +62,4 @@ app.all('*', (req, res) => {
 
 app.listen(port,function(){
     log(`*\n=== Batifis Server running on port ${port} ===\n*`, "blue")
-}) // lkfdg
+}) 
