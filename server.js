@@ -11,8 +11,8 @@ const log = require('./utils').log
 const port = process.env.PORT || 3001
 
 aws.config.update({
-    accessKeyId:process.env.S3_ACCESS_KEY_ID,  
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY, 
+    accessKeyId:process.env.AWS_ACCESS_KEY_ID,  
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID, 
     region:process.env.S3_REGION        
 })
 
@@ -24,7 +24,7 @@ const upload = multer({
         contentType:multerS3.AUTO_CONTENT_TYPE,
         acl:'public-read',
         metadata:function(req,file,callback){callback(null,{fieldName:file.fieldname})},
-        key:function(req,file,callback){callback(null,'inspekt_'+Date.now())},
+        key:function(req,file,callback){callback(null,'batifis_'+Date.now())},
     })
 });
 
@@ -61,7 +61,5 @@ app.all('*', (req, res) => {
 })
 
 app.listen(port,function(){
-    log(`
-    === Inspekt Open Server running on ${port} ===
-    `, "green")
-})
+    log(`*\n=== Batifis Server running on port ${port} ===\n*`, "blue")
+}) // lkfdg
