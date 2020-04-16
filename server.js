@@ -5,10 +5,20 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const aws = require('aws-sdk');
+
 const cors = require('cors')
 const log = require('./utils').log
 
+const {fileUploadHandler, fileRemovalHandler} = require('./filesHandler')
+let {getPhotos, setS3, bucketActions} = require('./api')
+
 const port = process.env.PORT || 3001
+
+const setJsonHeaders = (req, res, next) => {
+    res.header('Content-Type', "application/json"); 
+    next()
+}
+
 
 aws.config.update({
     accessKeyId:process.env.AWS_ACCESS_KEY_ID,  
@@ -17,6 +27,9 @@ aws.config.update({
 })
 
 const s3 = new aws.S3();
+
+setS3(s3)
+
 const upload = multer({
     storage:multerS3({
         s3,
@@ -25,8 +38,10 @@ const upload = multer({
         acl:'public-read',
         metadata:function(req,file,callback){callback(null,{fieldName:file.fieldname})},
         key:function(req,file,callback){callback(null,'batifis_img_'+Date.now())},
-    })
+    }),
+    limits: { fieldSize: 25 * 1024 * 1024 }
 });
+
 
 app.use((req,res,next)=>{
     if(req.originalUrl === '/favicon.ico'){
@@ -44,15 +59,34 @@ app.use((req, res, next) => {
     next()
 })
 
+app.use(bodyParser.json()) // handle json data
 app.use(bodyParser.urlencoded({
     parameterlimit:100000,
     limit:'50Mb',
     extended:true
 }))
 
-app.post('/upload',upload.array('filedata'),function(req,res){
-    console.log('reqfiles : ',req.files);
-    res.status(200).send('upload ok')
+app.post('/upload', upload.array('fileData'), fileUploadHandler)
+
+app.post('/remove', fileRemovalHandler)
+
+app.get('/photos', async(req, res) => {
+    const photos = await getPhotos()
+    res.status(200).send(photos)
+})
+
+app.get('/test', async(req, res) => {
+    try {
+        const resp = await bucketActions({
+            action: 'deleteObject',
+            subBucket: 'batifis_categorized_photos',
+        })
+    
+        res.status(200).send(resp)
+    }catch(e) {
+        log(`\n*** TEST ERROR ***\n${e}`, 'red')
+        res.status(500).send(e)
+    }
 })
 
 app.all('*', (req, res) => {
