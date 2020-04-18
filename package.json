@@ -19,9 +19,11 @@
   "homepage": "https://github.com/whileMeAwakeMeCode/batifisserver#readme",
   "dependencies": {
     "aws-sdk": "^2.652.0",
-    "dotenv": "^6.0.0",
     "cors": "^2.8.5",
+    "dotenv": "^6.0.0",
     "express": "^4.17.1",
+    "express-request-id": "^1.4.1",
+    "moment": "^2.24.0",
     "multer": "^1.4.2",
     "multer-s3": "^2.9.0",
     "nodemon": "^2.0.2"

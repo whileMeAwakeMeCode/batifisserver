@@ -1,3 +1,15 @@
+/**
+ * @dev Batifis Server
+ * @dev logs color code :
+ *  # green : compiler messages
+ *  # blue : server computation message
+ *  # magenta : requests information
+ *  # yellow : warning message
+ *  # red : error message
+ */
+
+/* ========================================================[ I M P O R T S ]======================================================== */
+// packages modules
 const Env = require('dotenv').config() 
 const express = require('express');
 const app = express();
@@ -5,13 +17,17 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const aws = require('aws-sdk');
-
+const addRequestId = require('express-request-id')();
 const cors = require('cors')
+
+// internal modules
+const { requestInfo, noFavicon, setDefaultHeaders } = require('./middlewares')
+const {fileUploadHandler, fileRemovalHandler, login} = require('./handlers')
+const {getPhotos, setS3, bucketActions} = require('./api')
 const log = require('./utils').log
 
-const {fileUploadHandler, fileRemovalHandler, login} = require('./handlers')
-let {getPhotos, setS3, bucketActions} = require('./api')
 
+/* ========================================================[ C O N F I G S ]======================================================== */
 const port = process.env.PORT || 3001
 
 aws.config.update({
@@ -37,22 +53,17 @@ const upload = multer({
 });
 
 
-app.use((req,res,next)=>{
-    if(req.originalUrl === '/favicon.ico'){
-        res.status(204).json({nope:true});
-    }else{
-        next();
-    }
-})
+/* ========================================================[ M I D D L E W A R E S ]======================================================== */
+/// reject favicon bots requests ///
+app.use(noFavicon)
 
 /// enable CORS ///
 app.use(cors());
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', "*"); 
-    res.header('Access-Control-Allow-Headers', "Content-Type, X-Requested-With, Origin, Accept");
-    next()
-})
 
+/// set default headers ///
+app.use(setDefaultHeaders)
+
+/// Body Parser ///
 app.use(bodyParser.json()) // handle json data
 app.use(bodyParser.urlencoded({
     parameterlimit:100000,
@@ -60,6 +71,14 @@ app.use(bodyParser.urlencoded({
     extended:true
 }))
 
+/// request id ///
+app.use(addRequestId)
+
+/// request info ///
+app.use(requestInfo)
+
+
+/* ========================================================[ ROUTES ]======================================================== */
 app.post('/upload', upload.array('fileData'), fileUploadHandler)
 
 app.post('/remove', fileRemovalHandler)
@@ -90,6 +109,8 @@ app.all('*', (req, res) => {
     res.status(404).send("Oups! Il n'y a rien ici")
 })
 
+
+/* ========================================================[ START UP ]======================================================== */
 app.listen(port,function(){
     log(`*\n=== Batifis Server running on port ${port} ===\n*`, "blue")
 }) 
