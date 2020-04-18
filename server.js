@@ -112,5 +112,5 @@ app.all('*', (req, res) => {
 
 /* ========================================================[ START UP ]======================================================== */
 app.listen(port,function(){
-    log(`*\n=== Batifis Server running on port ${port} ===\n*`, "blue")
+    log(`*\n=== Batifis Server started on port ${port} ===\n*`, "blue")
 }) 
