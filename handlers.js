@@ -1,6 +1,7 @@
 const {bucketActions, getPhotos} = require('./api')
 const utils = require('./utils')
 const subBucket = 'batifis_categorized_photos';
+const codes = require('./status_codes')
 
 
 
@@ -55,13 +56,13 @@ module.exports.fileUploadHandler = async(req, res) => {
 
             // return operation success
             const success = await Promise.resolve(data && (key===subBucket))
-            res.status(success ? 200 : 409).send(success ? categorizedPhotos : 'conflict') // 409: conflict
+            res.status(success ? codes.success.ok : codes.clientError.conflict).send(success ? categorizedPhotos : 'conflict') // 409: conflict
 
         }catch(e) {
             console.log('fileUploadHandler internal server error :', e)
-            res.status(500).send({error:"Le serveur a rencontré une erreur, veuillez réessayer"}) // bad request
+            res.status(codes.serverError.internalServerError).send({error:"Le serveur a rencontré une erreur, veuillez réessayer"}) // bad request
         }
-    } else res.status(400).send({error:"Le serveur n'a pas reçu de fichier à enregistrer"}) // bad request
+    } else res.status(codes.clientError.badRequest).send({error:"Le serveur n'a pas reçu de fichier à enregistrer"}) // bad request
 }
 
 
@@ -90,10 +91,34 @@ module.exports.fileRemovalHandler = async(req, res) => {
         response && utils.log(`fileRemovalHandler -> successfully removed source ${source}`, 'green');
 
         
-        res.status(200).send(response);
+        res.status(codes.success.ok).send(response);
 
     } else {
         utils.log('Error : fileRemovalHandler -> missing source', 'red')
-        res.status(417).send() // Expectation failed
+        res
+        .status(codes.clientError.expectationFailed)            // Expectation failed
+        .send()          
     }
+}
+
+/**
+ * @dev log user
+ * @param {object} req.body { hash }
+ * @return {object} { connected }
+ */
+module.exports.login = async(req, res) => {
+    const {hash} = req.body
+
+    const connected = await Promise.resolve(
+        hash && hash === process.env.ADMIN_HASH_KEY
+    )
+    
+    const status = await Promise.resolve(connected ? codes.success.ok : codes.clientError.unauthorized)
+
+    utils.log(`[POST][LOGIN]:${JSON.stringify({status, connected})}`, connected ? "blue": "yellow")
+
+    res
+    .status(status)            // unauth user
+    .send({connected})      
+    
 }

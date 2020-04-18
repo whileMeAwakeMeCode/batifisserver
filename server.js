@@ -9,16 +9,10 @@ const aws = require('aws-sdk');
 const cors = require('cors')
 const log = require('./utils').log
 
-const {fileUploadHandler, fileRemovalHandler} = require('./filesHandler')
+const {fileUploadHandler, fileRemovalHandler, login} = require('./handlers')
 let {getPhotos, setS3, bucketActions} = require('./api')
 
 const port = process.env.PORT || 3001
-
-const setJsonHeaders = (req, res, next) => {
-    res.header('Content-Type', "application/json"); 
-    next()
-}
-
 
 aws.config.update({
     accessKeyId:process.env.AWS_ACCESS_KEY_ID,  
@@ -69,6 +63,8 @@ app.use(bodyParser.urlencoded({
 app.post('/upload', upload.array('fileData'), fileUploadHandler)
 
 app.post('/remove', fileRemovalHandler)
+
+app.post('/login', login)
 
 app.get('/photos', async(req, res) => {
     const photos = await getPhotos()
